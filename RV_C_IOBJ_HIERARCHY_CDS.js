@@ -56,7 +56,7 @@ function flattenObject(obj, prefix = '', skipKeys = []) {
     return result;
 }
 
-function flattenCells(data, skipKeys = ['id'], language = 'EN') {
+function flattenCells(data, skipKeys = ['id', 'uri'], language = 'EN') {
     const allKeys = new Set();
     const flattenedRows = data.map(row => {
         const flatRow = {};
