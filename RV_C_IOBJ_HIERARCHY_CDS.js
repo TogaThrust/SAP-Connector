@@ -150,7 +150,7 @@ const s3DropObject = async (fileContent) => {
 
 // Main function to execute the script
 async function main() {
-    log(divider=true);
+    log('divider',true);
     const data = await fetchData();
     if (data.length > 0) {
         const csvParser = new Parser();
