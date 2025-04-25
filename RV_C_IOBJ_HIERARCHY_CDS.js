@@ -4,16 +4,22 @@ const axios = require('axios');
 const { Parser } = require('json2csv');
 const { S3Client } = require('@aws-sdk/client-s3');
 
+// logging functions
+var logs = '';
 function log(message, divider=false) {
-    const logFile = 'C:\\Users\\Administrator\\Documents\\SAP-Connector\\logs\\RV_C_IOBJ_HIERARCHY_CDS.log';
     if(divider){
-        fs.appendFileSync(logFile, `\n\n-------------------- ${new Date().toISOString()} --------------------\n`);
+        logs += `\n\n-------------------- ${new Date().toISOString()} --------------------\n`;
     } else {
-        fs.appendFileSync(logFile, `${new Date().toISOString()} - ${message}\n`);
+        logs += logFile, `${new Date().toISOString()} - ${message}\n`;
     }
 }
 
-// Function to fetch data from OData service
+function printLogs(){
+    const logFile = 'C:\\Users\\Administrator\\Documents\\SAP-Connector\\logs\\RV_C_IOBJ_HIERARCHY_CDS.log';
+    fs.appendFileSync(logFile, logs);
+}
+
+// Functions to fetch data from OData service
 async function fetchData() {
     // Define the OData service URL
     const baseUrl = `http://${process.env.HOST_IP}:${process.env.PORT}/sap/opu/odata/sap/RV_C_IOBJ_HIERARCHY_CDS/Rv_C_Iobj_Hierarchy`;
@@ -49,6 +55,7 @@ async function fetchData() {
     return data;
 }
 
+// transformation logics
 function flattenObject(obj, prefix = '', skipKeys = []) {
     const result = {};
     for (let key in obj) {
@@ -116,6 +123,7 @@ function flattenCells(data, skipKeys = ['id', 'uri'], language = 'EN') {
     return completedRows;
 }
 
+// function to write to s3
 const s3DropObject = async (fileContent) => {
     const {
         AWS_ACCESS_KEY_ID,
@@ -159,6 +167,7 @@ async function main() {
     } else {
         log('❌ No data retrieved');
     }
+    printLogs(logs);
 }
 
 main().catch((err) => log('❌ Error: ', err));
