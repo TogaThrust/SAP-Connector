@@ -3,6 +3,7 @@ require('dotenv').config();  // Load environment variables from .env file
 const axios = require('axios');
 const fs = require('fs');
 const { Parser } = require('json2csv');
+const { S3Client } = require('@aws-sdk/client-s3');
 
 // Define the OData service URL
 const baseUrl = `http://${process.env.HOST_IP}:${process.env.PORT}/sap/opu/odata/sap/RV_C_IOBJ_HIERARCHY_CDS/Rv_C_Iobj_Hierarchy`;
@@ -107,21 +108,46 @@ function flattenCells(data, skipKeys = ['id', 'uri'], language = 'EN') {
     return completedRows;
 }
 
-// Function to save data as a CSV file
-function saveToCSV(data) {
-    const csvParser = new Parser();
-    const csv = csvParser.parse(data);
+const s3DropObject = async (fileContent) => {
+    const {
+        AWS_ACCESS_KEY_ID,
+        AWS_SECRET_ACCESS_KEY,
+        AWS_REGION
+    } = process.env;
+    const BUCKET_NAME = 'adaptivetest-objectstorage';
+    
+    const s3 = new S3Client({
+        region: AWS_REGION,
+        credentials: {
+            accessKeyId: AWS_ACCESS_KEY_ID,
+            secretAccessKey: AWS_SECRET_ACCESS_KEY
+        }
+    });
 
-    fs.writeFileSync('./data/hierarchy_data.csv', csv);
-    console.log('Data has been saved to hierarchy_data.csv');
-}
+    const params = {
+        Bucket: BUCKET_NAME,
+        Key: 'RV_C_IOBJ_HIERARCHY_CDS.csv',
+        Body: fileContent,
+        ContentType: 'text/csv'
+    };
+
+    try {
+        const command = new PutObjectCommand(params);
+        const result = await s3.send(command);
+        console.log('✅ File uploaded successfully', result);
+    } catch (err) {
+        console.error('❌ Error uploading file:', err);
+    }
+};
 
 // Main function to execute the script
 async function main() {
     // const expandParams = '?$expand=to_iobj,to_lastChangedBy,to_text';
     const data = await fetchData(baseUrl, filter);
     if (data.length > 0) {
-        saveToCSV(data);
+        const csvParser = new Parser();
+        const csv = csvParser.parse(data);
+        s3DropObject(csv);
     } else {
         console.log('No data retrieved');
     }
