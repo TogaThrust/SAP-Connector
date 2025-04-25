@@ -1,18 +1,23 @@
 require('dotenv').config();  // Load environment variables from .env file
-
+const fs = require('fs');
 const axios = require('axios');
 const { Parser } = require('json2csv');
 const { S3Client } = require('@aws-sdk/client-s3');
 
-// Define the OData service URL
-const baseUrl = `http://${process.env.HOST_IP}:${process.env.PORT}/sap/opu/odata/sap/RV_C_IOBJ_HIERARCHY_CDS/Rv_C_Iobj_Hierarchy`;
-
-const filter = "?$expand=to_iobj,to_lastChangedBy,to_text,to_version";
+function log(message) {
+    const logFile = 'C:\\Users\\Administrator\\Documents\\SAP-Connector\\logs\\RV_C_IOBJ_HIERARCHY_CDS.log';
+    fs.appendFileSync(logFile, `${new Date().toISOString()} - ${message}\n`);
+}
 
 // Function to fetch data from OData service
-async function fetchData(url, filter) {
+async function fetchData() {
+    // Define the OData service URL
+    const baseUrl = `http://${process.env.HOST_IP}:${process.env.PORT}/sap/opu/odata/sap/RV_C_IOBJ_HIERARCHY_CDS/Rv_C_Iobj_Hierarchy`;
+
+    const filter = "?$expand=to_iobj,to_lastChangedBy,to_text,to_version";
+    
     let data = [];
-    let nextUrl = url + filter;
+    let nextUrl = baseUrl + filter;
 
     while (nextUrl) {
         try {
@@ -32,7 +37,7 @@ async function fetchData(url, filter) {
             // Check if there’s a next page (pagination)
             nextUrl = jsonData.__next || null;
         } catch (error) {
-            console.error(`Error fetching data: ${error.response ? error.response.status : error.message}`);
+            log(`Error fetching data: ${error.response ? error.response.status : error.message}`);
             nextUrl = null;  // Stop the loop if there's an error
         }
     }
@@ -114,7 +119,7 @@ const s3DropObject = async (fileContent) => {
         AWS_REGION
     } = process.env;
     const BUCKET_NAME = 'adaptivetest-objectstorage';
-    
+
     const s3 = new S3Client({
         region: AWS_REGION,
         credentials: {
@@ -133,23 +138,23 @@ const s3DropObject = async (fileContent) => {
     try {
         const command = new PutObjectCommand(params);
         const result = await s3.send(command);
-        console.log('✅ File uploaded successfully', result);
+        log('✅ File uploaded successfully: ' + result);
     } catch (err) {
-        console.error('❌ Error uploading file:', err);
+        log('❌ Error uploading file: ' + err);
     }
 };
 
 // Main function to execute the script
 async function main() {
-    // const expandParams = '?$expand=to_iobj,to_lastChangedBy,to_text';
-    const data = await fetchData(baseUrl, filter);
+    log(`\n-------------------- ${new Date().toISOString()} --------------------\n`)
+    const data = await fetchData();
     if (data.length > 0) {
         const csvParser = new Parser();
         const csv = csvParser.parse(data);
         s3DropObject(csv);
     } else {
-        console.log('No data retrieved');
+        log('❌ No data retrieved');
     }
 }
 
-main().catch((err) => console.error('Error:', err));
+main().catch((err) => log('❌ Error: ', err));
