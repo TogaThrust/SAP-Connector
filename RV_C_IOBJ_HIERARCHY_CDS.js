@@ -1,14 +1,13 @@
 require('dotenv').config();  // Load environment variables from .env file
 
 const axios = require('axios');
-const fs = require('fs');
 const { Parser } = require('json2csv');
 const { S3Client } = require('@aws-sdk/client-s3');
 
 // Define the OData service URL
 const baseUrl = `http://${process.env.HOST_IP}:${process.env.PORT}/sap/opu/odata/sap/RV_C_IOBJ_HIERARCHY_CDS/Rv_C_Iobj_Hierarchy`;
 
-const filter = "?$expand=to_iobj,to_lastChangedBy,to_text,to_version&$filter=iobjName eq \'0GL_ACCOUNT\'";
+const filter = "?$expand=to_iobj,to_lastChangedBy,to_text,to_version";
 
 // Function to fetch data from OData service
 async function fetchData(url, filter) {
