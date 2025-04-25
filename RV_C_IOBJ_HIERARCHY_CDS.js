@@ -10,13 +10,14 @@ function log(message, divider=false) {
     if(divider){
         logs += `\n\n-------------------- ${new Date().toISOString()} --------------------\n`;
     } else {
-        logs += logFile, `${new Date().toISOString()} - ${message}\n`;
+        logs += `${new Date().toISOString()} - ${message}\n`;
     }
 }
 
 function printLogs(){
     const logFile = 'C:\\Users\\Administrator\\Documents\\SAP-Connector\\logs\\RV_C_IOBJ_HIERARCHY_CDS.log';
     fs.appendFileSync(logFile, logs);
+    console.log(logs);
 }
 
 // Functions to fetch data from OData service
