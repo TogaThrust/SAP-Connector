@@ -4,9 +4,13 @@ const axios = require('axios');
 const { Parser } = require('json2csv');
 const { S3Client } = require('@aws-sdk/client-s3');
 
-function log(message) {
+function log(message, divider=false) {
     const logFile = 'C:\\Users\\Administrator\\Documents\\SAP-Connector\\logs\\RV_C_IOBJ_HIERARCHY_CDS.log';
-    fs.appendFileSync(logFile, `${new Date().toISOString()} - ${message}\n`);
+    if(divider){
+        fs.appendFileSync(logFile, `\n\n-------------------- ${new Date().toISOString()} --------------------\n`);
+    } else {
+        fs.appendFileSync(logFile, `${new Date().toISOString()} - ${message}\n`);
+    }
 }
 
 // Function to fetch data from OData service
@@ -146,7 +150,7 @@ const s3DropObject = async (fileContent) => {
 
 // Main function to execute the script
 async function main() {
-    log(`\n-------------------- ${new Date().toISOString()} --------------------\n`)
+    log(divider=true);
     const data = await fetchData();
     if (data.length > 0) {
         const csvParser = new Parser();
