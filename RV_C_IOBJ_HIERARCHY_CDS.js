@@ -4,7 +4,14 @@ const axios = require('axios');
 const { Parser } = require('json2csv');
 const { S3Client } = require('@aws-sdk/client-s3');
 
+
 // logging functions
+const today = new Date();
+const yyyy = today.getFullYear();
+const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+const dd = String(today.getDate()).padStart(2, '0');
+const formattedDate = `${yyyy}-${mm}-${dd}`;
+
 var logs = '';
 function log(message, divider=false) {
     if(divider){
@@ -14,8 +21,8 @@ function log(message, divider=false) {
     }
 }
 
-function printLogs(){
-    const logFile = 'C:\\Users\\Administrator\\Documents\\SAP-Connector\\logs\\RV_C_IOBJ_HIERARCHY_CDS.log';
+function printLogs(){    
+    const logFile = `C:\\Users\\Administrator\\Documents\\SAP-Connector\\logs\\${formattedDate}_RV_C_IOBJ_HIERARCHY_CDS.log`;
     fs.appendFileSync(logFile, logs);
     console.log(logs);
 }
