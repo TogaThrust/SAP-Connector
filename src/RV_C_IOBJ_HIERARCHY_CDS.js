@@ -1,4 +1,9 @@
-require('dotenv').config();  // Load environment variables from .env file
+/*
+    Pulls data from SAP BW/4HANA and uploads to S3.
+    Processing done to flatten the OData Hierarchy.
+*/
+
+require('dotenv').config();
 const fs = require('fs');
 const axios = require('axios');
 const { Parser } = require('json2csv');
@@ -22,6 +27,7 @@ function log(message, divider=false) {
 }
 
 function printLogs(){    
+    // TODO this can be a dynamic path on the slight change that this thing goes live.
     const logFile = `C:\\Users\\Administrator\\Documents\\SAP-Connector\\logs\\${formattedDate}_RV_C_IOBJ_HIERARCHY_CDS.log`;
     fs.appendFileSync(logFile, logs);
     console.log(logs);
@@ -103,7 +109,6 @@ function flattenCells(data, skipKeys = ['id', 'uri'], language = 'EN') {
                             const filteredItem = flattenObject(item, `${key}[${index}]`, skipKeys);
                             // Remove metadata fields if present
                             delete filteredItem['__metadata'];
-
                             Object.assign(flatRow, filteredItem);
                             Object.keys(filteredItem).forEach(k => allKeys.add(k));
                         }
@@ -158,9 +163,9 @@ const s3DropObject = async (fileContent) => {
     try {
         const command = new PutObjectCommand(params);
         const result = await s3.send(command);
-        log('✅ File uploaded successfully: ' + result);
+        log('File uploaded successfully: ' + result);
     } catch (err) {
-        log('❌ Error uploading file: ' + err);
+        log('Error uploading file: ' + err);
     }
 };
 
@@ -173,9 +178,9 @@ async function main() {
         const csv = csvParser.parse(data);
         s3DropObject(csv);
     } else {
-        log('❌ No data retrieved');
+        log('No data retrieved');
     }
     printLogs(logs);
 }
 
-main().catch((err) => log('❌ Error: ', err));
+main().catch((err) => log('Error: ', err));
